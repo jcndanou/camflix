@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ movie.title }} - CamFlix{% endblock %}
+
+{% block content %}
+<!-- Movie Backdrop -->
+{% if movie.backdrop_url %}
+<div class="relative h-96 overflow-hidden">
+    <img src="{{ movie.backdrop_url }}" alt="{{ movie.title }}"
+         class="w-full h-full object-cover">
+    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent"></div>
+</div>
+{% endif %}
+
+<!-- Movie Info -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Poster -->
+        <div class="flex-shrink-0">
+            {% if movie.poster_url %}
+            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}"
+                 class="w-64 rounded-lg shadow-xl">
+            {% else %}
+            <div class="w-64 h-96 bg-gray-700 rounded-lg flex items-center justify-center">
+                <i class="fas fa-film text-6xl text-gray-600"></i>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Details -->
+        <div class="flex-grow">
+            <h1 class="text-4xl font-bold mb-2">{{ movie.get_localized_title }}</h1>
+            {% if movie.original_title != movie.title %}
+            <p class="text-gray-400 mb-4">{{ movie.original_title }}</p>
+            {% endif %}
+
+            <!-- Meta info -->
+            <div class="flex flex-wrap gap-4 mb-6 text-sm">
+                {% if movie.release_date %}
+                <span class="flex items-center">
+                    <i class="fas fa-calendar mr-2"></i>
+                    {{ movie.release_date.year }}
+                </span>
+                {% endif %}
+                {% if movie.runtime %}
+                <span class="flex items-center">
+                    <i class="fas fa-clock mr-2"></i>
+                    {{ movie.runtime }} min
+                </span>
+                {% endif %}
+                {% if movie.vote_average %}
+                <span class="flex items-center">
+                    <i class="fas fa-star text-yellow-400 mr-2"></i>
+                    {{ movie.vote_average|floatformat:1 }}/10 ({{ movie.vote_count }} votes)
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Genres -->
+            {% if movie.genres.exists %}
+            <div class="flex flex-wrap gap-2 mb-6">
+                {% for genre in movie.genres.all %}
+                <a href="{% url 'movies:list' %}?genre={{ genre.id }}"
+                   class="px-3 py-1 bg-gray-800 rounded-full text-sm hover:bg-gray-700 transition">
+                    {{ genre.get_localized_name }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="flex flex-wrap gap-4 mb-6">
+                <!-- Rating -->
+                {% if user.is_authenticated %}
+                <div class="bg-gray-800/40 rounded-lg p-4 backdrop-blur-sm border border-gray-700/30">
+                    <form method="post" action="{% url 'ratings:rate' movie.id %}" id="rating-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="score" id="rating-score" value="{% if user_rating %}{{ user_rating.score }}{% endif %}">
+
+                        <div class="mb-3">
+                            <label class="text-xs text-gray-400 block mb-2">{% trans "Votre note" %}</label>
+
+                            <!-- Star Rating -->
+                            <div class="flex items-center gap-1 mb-2" id="star-rating">
+                                {% for i in "12345" %}
+                                <div class="relative star-container" data-star="{{ forloop.counter }}">
+                                    <button type="button" class="star-btn relative" data-rating="{{ forloop.counter }}0">
+                                        <svg class="w-7 h-7 star-empty transition-colors duration-200"
+                                             fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                            <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
+                                        </svg>
+                                        <svg class="w-7 h-7 star-filled absolute inset-0 opacity-0 transition-opacity duration-200"
+                                             fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                                <span class="ml-2 text-sm text-gray-300" id="rating-display">
+                                    {% if user_rating %}{{ user_rating.score }}/100{% else %}--/100{% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-purple-600/80 hover:bg-purple-600 px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium">
+                            {% if user_rating %}{% trans "Modifier" %}{% else %}{% trans "Noter" %}{% endif %}
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Watchlist -->
+                <div class="flex items-center">
+                    {% if in_watchlist %}
+                    <a href="{% url 'movies:remove-from-watchlist' movie.id %}"
+                       class="group flex items-center gap-3 bg-gray-800/40 hover:bg-gray-800/60 px-5 py-3 rounded-lg transition-all duration-200 border border-gray-700/30">
+                        <svg class="w-6 h-6 text-red-400 fill-red-400 group-hover:scale-110 transition-transform duration-200"
+                             viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span class="text-sm font-medium">{% trans "Dans ma liste" %}</span>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'movies:add-to-watchlist' movie.id %}"
+                       class="group flex items-center gap-3 bg-gray-800/40 hover:bg-gray-800/60 px-5 py-3 rounded-lg transition-all duration-200 border border-gray-700/30">
+                        <svg class="w-6 h-6 text-gray-400 group-hover:text-red-400 transition-colors duration-200"
+                             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <span class="text-sm font-medium group-hover:text-red-400 transition-colors duration-200">{% trans "Ajouter à ma liste" %}</span>
+                    </a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="bg-gray-800/30 rounded-xl p-6 backdrop-blur-sm border border-gray-700">
+                    <p class="text-gray-300 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <a href="{% url 'account_login' %}" class="text-purple-400 hover:text-purple-300 font-medium underline underline-offset-2">
+                            {% trans "Connectez-vous" %}
+                        </a>
+                        <span>{% trans "pour noter ce film et l'ajouter à votre liste" %}</span>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Synopsis -->
+            {% if movie.tagline %}
+            <p class="text-xl text-gray-300 italic mb-4">"{{ movie.tagline }}"</p>
+            {% endif %}
+
+            <h2 class="text-2xl font-semibold mb-4">{% trans "Synopsis" %}</h2>
+            <p class="text-gray-300 leading-relaxed mb-6">
+                {{ movie.get_localized_overview|default:"Pas de synopsis disponible." }}
+            </p>
+
+            <!-- Cast -->
+            {% if cast %}
+            <h2 class="text-2xl font-semibold mb-4">{% trans "Distribution" %}</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
+                {% for member in cast %}
+                <div class="flex items-center space-x-3">
+                    {% if member.actor.profile_url %}
+                    <img src="{{ member.actor.profile_url }}" alt="{{ member.actor.name }}"
+                         class="w-12 h-12 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-600"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="font-semibold text-sm">{{ member.actor.name }}</p>
+                        <p class="text-xs text-gray-400">{{ member.character }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    {% include 'movies/comments.html' %}
+
+    <!-- Similar Movies -->
+    {% if similar_movies %}
+    <section class="mt-12">
+        <h2 class="text-2xl font-semibold mb-6">{% trans "Films similaires" %}</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {% for similar in similar_movies %}
+            <div class="group relative overflow-hidden rounded-lg hover:transform hover:scale-105 transition">
+                <a href="{% url 'movies:detail' similar.id %}">
+                    {% if similar.poster_url %}
+                    <img src="{{ similar.poster_url }}" alt="{{ similar.title }}"
+                         class="w-full h-auto">
+                    {% else %}
+                    <div class="bg-gray-700 aspect-[2/3] flex items-center justify-center">
+                        <i class="fas fa-film text-4xl text-gray-600"></i>
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute bottom-0 p-2">
+                            <h3 class="font-semibold text-xs line-clamp-2">{{ similar.title }}</h3>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<style>
+    /* Subtle star styles */
+    .star-container {
+        position: relative;
+    }
+
+    .star-empty {
+        color: #6B7280;
+        transition: color 0.2s ease;
+    }
+
+    .star-filled {
+        color: #FBBF24;
+        transition: opacity 0.2s ease;
+    }
+
+    .star-container:hover .star-empty {
+        color: #9CA3AF;
+    }
+
+    /* Minimal hover effect */
+    .star-btn:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const starButtons = document.querySelectorAll('.star-btn');
+    const ratingScore = document.getElementById('rating-score');
+    const ratingDisplay = document.getElementById('rating-display');
+
+    let currentRating = parseInt(ratingScore.value) || 0;
+
+    // Update star display
+    function updateStarDisplay(rating) {
+        starButtons.forEach((btn) => {
+            const starContainer = btn.parentElement;
+            const emptyStar = starContainer.querySelector('.star-empty');
+            const filledStar = starContainer.querySelector('.star-filled');
+            const starValue = parseInt(btn.dataset.rating);
+
+            if (starValue <= rating) {
+                filledStar.style.opacity = '1';
+                emptyStar.style.color = '#6B7280';
+            } else {
+                filledStar.style.opacity = '0';
+                emptyStar.style.color = '#6B7280';
+            }
+        });
+
+        // Update display text
+        ratingDisplay.textContent = rating > 0 ? `${rating}/100` : '--/100';
+    }
+
+    // Handle star clicks
+    starButtons.forEach((btn) => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const rating = parseInt(this.dataset.rating);
+            currentRating = rating;
+            ratingScore.value = rating;
+            updateStarDisplay(rating);
+        });
+
+        btn.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.dataset.rating);
+            updateStarDisplay(rating);
+        });
+    });
+
+    // Reset on mouse leave
+    document.getElementById('star-rating').addEventListener('mouseleave', function() {
+        updateStarDisplay(currentRating);
+    });
+
+    // Initialize
+    updateStarDisplay(currentRating);
+});
+</script>
+{% endblock %}

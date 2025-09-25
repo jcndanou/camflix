@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Recommandations pour vous" %} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">{% trans "Recommandations pour vous" %}</h1>
+        <p class="text-gray-400">{% trans "Films sélectionnés spécialement pour vos goûts" %}</p>
+    </div>
+
+    <!-- Recommendation Sections -->
+    <div class="space-y-8">
+        <!-- Based on Your Ratings -->
+        <section>
+            <h2 class="text-2xl font-semibold mb-6 text-white">
+                <i class="fas fa-star text-purple-400 mr-2"></i>
+                {% trans "Basé sur vos notes" %}
+            </h2>
+
+            {% if recommended_movies %}
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {% for movie in recommended_movies %}
+                <div class="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-700 transition group">
+                    <a href="{% url 'movies:detail' movie.id %}">
+                        <div class="aspect-[2/3] relative">
+                            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute top-2 right-2">
+                                <span class="bg-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
+                                    {{ movie.rating|floatformat:1 }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <h3 class="font-medium text-white text-sm mb-1 line-clamp-2">{{ movie.title }}</h3>
+                            <p class="text-gray-400 text-xs">{{ movie.release_date|date:"Y" }}</p>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-gray-800 rounded-lg p-8 text-center">
+                <i class="fas fa-star text-gray-600 text-4xl mb-4"></i>
+                <p class="text-gray-400 mb-4">{% trans "Notez quelques films pour recevoir des recommandations personnalisées." %}</p>
+                <a href="{% url 'movies:list' %}" class="text-purple-400 hover:text-purple-300">
+                    {% trans "Découvrir des films" %}
+                </a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- System Recommendations -->
+        {% if recommendations %}
+        <section>
+            <h2 class="text-2xl font-semibold mb-6 text-white">
+                <i class="fas fa-magic text-green-400 mr-2"></i>
+                {% trans "Recommandations système" %}
+            </h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {% for recommendation in recommendations %}
+                <div class="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-700 transition group">
+                    <a href="{% url 'movies:detail' recommendation.movie.id %}">
+                        <div class="aspect-[2/3] relative">
+                            <img src="{{ recommendation.movie.poster_url }}" alt="{{ recommendation.movie.title }}"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute top-2 right-2">
+                                <span class="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    {{ recommendation.confidence_score|floatformat:0 }}%
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <h3 class="font-medium text-white text-sm mb-1 line-clamp-2">{{ recommendation.movie.title }}</h3>
+                            <p class="text-gray-400 text-xs">{{ recommendation.movie.release_date|date:"Y" }}</p>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <!-- Recommendation Settings -->
+    <div class="mt-12 bg-gray-800 rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-white mb-2">{% trans "Personnaliser vos recommandations" %}</h3>
+                <p class="text-gray-400">{% trans "Ajustez vos préférences pour des recommandations plus précises" %}</p>
+            </div>
+            <a href="{% url 'accounts:settings' %}"
+               class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md text-sm font-medium transition">
+                <i class="fas fa-cog mr-2"></i>{% trans "Paramètres" %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}

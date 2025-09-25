@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Gestion des emails" %} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-purple-600 rounded-full mb-4">
+                <i class="fas fa-envelope text-3xl text-white"></i>
+            </div>
+            <h2 class="text-3xl font-bold">{% trans "Gestion des adresses email" %}</h2>
+            <p class="mt-2 text-gray-400">{% trans "Gérez vos adresses email associées à votre compte" %}</p>
+        </div>
+
+        <!-- Email Management Box -->
+        <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
+            {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-900 border-green-700{% elif message.tags == 'error' %}bg-red-900 border-red-700{% else %}bg-blue-900 border-blue-700{% endif %} border rounded-lg p-4 mb-3">
+                    <p class="text-white">{{ message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Current Emails -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-list mr-2 text-purple-400"></i>
+                    {% trans "Vos adresses email" %}
+                </h3>
+
+                {% if user.emailaddress_set.all %}
+                <div class="space-y-3">
+                    {% for emailaddress in user.emailaddress_set.all %}
+                    <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                            <div>
+                                <p class="text-white font-medium">{{ emailaddress.email }}</p>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    {% if emailaddress.primary %}
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-green-400 bg-green-900 rounded">
+                                        <i class="fas fa-star mr-1"></i> {% trans "Principale" %}
+                                    </span>
+                                    {% endif %}
+                                    {% if emailaddress.verified %}
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-blue-400 bg-blue-900 rounded">
+                                        <i class="fas fa-check-circle mr-1"></i> {% trans "Vérifiée" %}
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-yellow-400 bg-yellow-900 rounded">
+                                        <i class="fas fa-exclamation-circle mr-1"></i> {% trans "Non vérifiée" %}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            {% if not emailaddress.primary %}
+                            <form method="post" action="{% url 'account_email' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                <button type="submit" name="action_primary"
+                                        class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition"
+                                        title="{% trans 'Définir comme principale' %}">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if not emailaddress.verified %}
+                            <form method="post" action="{% url 'account_email' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                <button type="submit" name="action_send"
+                                        class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition"
+                                        title="{% trans 'Renvoyer la vérification' %}">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if emailaddress_set.count > 1 %}
+                            <form method="post" action="{% url 'account_email' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                <button type="submit" name="action_remove"
+                                        class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
+                                        title="{% trans 'Supprimer' %}"
+                                        onclick="return confirm('{% trans 'Êtes-vous sûr de vouloir supprimer cette adresse email ?' %}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="bg-gray-700 rounded-lg p-6 text-center">
+                    <i class="fas fa-inbox text-gray-500 text-4xl mb-3"></i>
+                    <p class="text-gray-400">{% trans "Aucune adresse email associée" %}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Add New Email -->
+            <div class="border-t border-gray-700 pt-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-plus-circle mr-2 text-green-400"></i>
+                    {% trans "Ajouter une adresse email" %}
+                </h3>
+
+                <form method="post" action="{% url 'account_email' %}" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300 mb-2">
+                            {% trans "Nouvelle adresse email" %}
+                        </label>
+                        <div class="relative">
+                            <input type="email"
+                                   name="email"
+                                   id="email"
+                                   required
+                                   placeholder="{% trans 'votre@email.com' %}"
+                                   class="w-full px-4 py-3 pl-10 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <i class="fas fa-at absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" name="action_add"
+                            class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                        <i class="fas fa-plus mr-2"></i>
+                        {% trans "Ajouter l'adresse email" %}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Help Text -->
+            <div class="mt-6 p-4 bg-gray-700 rounded-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-400 mt-1 mr-3"></i>
+                    <div class="text-sm text-gray-300">
+                        <p class="mb-2">{% trans "Informations importantes :" %}</p>
+                        <ul class="list-disc list-inside space-y-1 text-gray-400">
+                            <li>{% trans "Vous devez vérifier chaque nouvelle adresse email avant de pouvoir l'utiliser" %}</li>
+                            <li>{% trans "Vous pouvez avoir plusieurs adresses email associées à votre compte" %}</li>
+                            <li>{% trans "Une seule adresse peut être définie comme principale" %}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Profile -->
+        <div class="mt-8 text-center">
+            <a href="{% url 'home' %}" class="text-gray-400 hover:text-purple-400 transition">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {% trans "Retour à l'accueil" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

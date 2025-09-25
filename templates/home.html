@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accueil - CamFlix{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative h-screen flex items-center justify-center overflow-hidden">
+    <!-- Background with gradient overlay -->
+    <div class="absolute inset-0 gradient-bg opacity-90"></div>
+
+    <!-- Content -->
+    <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-bold mb-6">
+            Découvrez votre prochain film préféré
+        </h1>
+        <p class="text-xl md:text-2xl mb-8 text-gray-200">
+            Des recommandations personnalisées basées sur vos goûts uniques
+        </p>
+
+        {% if not user.is_authenticated %}
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'account_signup' %}"
+               class="bg-purple-600 hover:bg-purple-700 px-8 py-4 rounded-full text-lg font-semibold transition transform hover:scale-105">
+                Commencer gratuitement
+            </a>
+            <a href="{% url 'movies:list' %}"
+               class="border-2 border-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-full text-lg font-semibold transition">
+                Explorer les films
+            </a>
+        </div>
+        {% else %}
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'recommendations:for-you' %}"
+               class="bg-purple-600 hover:bg-purple-700 px-8 py-4 rounded-full text-lg font-semibold transition transform hover:scale-105">
+                Voir mes recommandations
+            </a>
+            <a href="{% url 'movies:trending' %}"
+               class="border-2 border-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-full text-lg font-semibold transition">
+                Films tendances
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <i class="fas fa-chevron-down text-2xl"></i>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-20 px-4">
+    <div class="max-w-7xl mx-auto">
+        <h2 class="text-4xl font-bold text-center mb-12">
+            Pourquoi choisir CamFlix ?
+        </h2>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="glass-effect rounded-xl p-8 text-center hover:transform hover:scale-105 transition">
+                <div class="text-purple-400 text-5xl mb-4">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-4">IA Intelligente</h3>
+                <p class="text-gray-300">
+                    Notre algorithme apprend de vos préférences pour vous suggérer des films que vous allez adorer.
+                </p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="glass-effect rounded-xl p-8 text-center hover:transform hover:scale-105 transition">
+                <div class="text-purple-400 text-5xl mb-4">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-4">Communauté Active</h3>
+                <p class="text-gray-300">
+                    Partagez vos avis et découvrez les recommandations d'utilisateurs aux goûts similaires.
+                </p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="glass-effect rounded-xl p-8 text-center hover:transform hover:scale-105 transition">
+                <div class="text-purple-400 text-5xl mb-4">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-4">Catalogue Immense</h3>
+                <p class="text-gray-300">
+                    Accédez à des milliers de films de tous genres, époques et origines.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trending Movies Section -->
+{% if trending_movies %}
+<section class="py-20 bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold">Films tendances</h2>
+            <a href="{% url 'movies:trending' %}" class="text-purple-400 hover:text-purple-300 transition">
+                Voir tout <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {% for movie in trending_movies|slice:":12" %}
+            <div class="group relative overflow-hidden rounded-lg hover:transform hover:scale-105 transition">
+                <a href="{% url 'movies:detail' movie.id %}">
+                    {% if movie.poster_url %}
+                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}"
+                         class="w-full h-auto">
+                    {% else %}
+                    <div class="bg-gray-700 aspect-[2/3] flex items-center justify-center">
+                        <i class="fas fa-film text-4xl text-gray-600"></i>
+                    </div>
+                    {% endif %}
+
+                    <!-- Overlay on hover -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute bottom-0 p-4">
+                            <h3 class="font-semibold text-sm">{{ movie.title }}</h3>
+                            <div class="flex items-center mt-1 text-xs">
+                                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                <span>{{ movie.vote_average|floatformat:1 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- How it Works Section -->
+<section class="py-20 px-4">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-4xl font-bold text-center mb-12">
+            Comment ça marche ?
+        </h2>
+
+        <div class="space-y-12">
+            <!-- Step 1 -->
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="flex-shrink-0">
+                    <div class="w-20 h-20 rounded-full bg-purple-600 flex items-center justify-center text-2xl font-bold">
+                        1
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-2xl font-semibold mb-4">Créez votre profil</h3>
+                    <p class="text-gray-300">
+                        Inscrivez-vous gratuitement et personnalisez votre profil avec vos genres préférés.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="flex-shrink-0">
+                    <div class="w-20 h-20 rounded-full bg-purple-600 flex items-center justify-center text-2xl font-bold">
+                        2
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-2xl font-semibold mb-4">Notez des films</h3>
+                    <p class="text-gray-300">
+                        Évaluez les films que vous avez vus sur une échelle de 0 à 100 pour affiner vos recommandations.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="flex-shrink-0">
+                    <div class="w-20 h-20 rounded-full bg-purple-600 flex items-center justify-center text-2xl font-bold">
+                        3
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-2xl font-semibold mb-4">Découvrez de nouveaux films</h3>
+                    <p class="text-gray-300">
+                        Recevez des recommandations personnalisées basées sur vos goûts et ceux d'utilisateurs similaires.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 px-4 gradient-bg">
+    <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-4xl font-bold mb-6">
+            Prêt à découvrir votre prochain coup de cœur ?
+        </h2>
+        <p class="text-xl mb-8 text-gray-200">
+            Rejoignez des milliers de cinéphiles qui ont déjà trouvé leurs films préférés grâce à CamFlix.
+        </p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'account_signup' %}"
+           class="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 rounded-full text-lg font-semibold transition transform hover:scale-105 inline-block">
+            S'inscrire maintenant
+        </a>
+        {% else %}
+        <a href="{% url 'movies:list' %}"
+           class="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 rounded-full text-lg font-semibold transition transform hover:scale-105 inline-block">
+            Explorer les films
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

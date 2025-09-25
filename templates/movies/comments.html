@@ -1,0 +1,335 @@
+{% load i18n %}
+
+<!-- Comments Section -->
+<section class="mt-12" id="comments-section">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-semibold">
+            {% trans "Commentaires" %}
+            <span class="text-sm text-gray-400 ml-2">({{ comments.count }})</span>
+        </h2>
+    </div>
+
+    <!-- Add Comment Form -->
+    {% if user.is_authenticated %}
+    <div class="bg-gray-800/30 rounded-lg p-4 mb-6 border border-gray-700/30">
+        <form method="post" action="{% url 'movies:add-comment' movie.id %}">
+            {% csrf_token %}
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-semibold">{{ user.username|first|upper }}</span>
+                </div>
+                <div class="flex-grow">
+                    {{ comment_form.content }}
+                    <div class="flex items-center justify-between mt-3">
+                        <label class="flex items-center text-sm text-gray-400 cursor-pointer">
+                            {{ comment_form.is_spoiler }}
+                            <span class="ml-2">{% trans "Contient des spoilers" %}</span>
+                        </label>
+                        <button type="submit" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                            {% trans "Publier" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="bg-gray-800/20 rounded-lg p-4 mb-6 border border-gray-700/30">
+        <p class="text-gray-400 text-center">
+            <a href="{% url 'account_login' %}" class="text-purple-400 hover:text-purple-300">{% trans "Connectez-vous" %}</a>
+            {% trans "pour laisser un commentaire" %}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Comments List -->
+    <div class="space-y-4">
+        {% for comment in comments %}
+        <div class="comment-item bg-gray-800/20 rounded-lg p-4 border border-gray-700/30" data-comment-id="{{ comment.id }}">
+            <!-- Comment Header -->
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-semibold">{{ comment.user.username|first|upper }}</span>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-semibold">{{ comment.user.username }}</span>
+                        <span class="text-xs text-gray-500">•</span>
+                        <time class="text-xs text-gray-500" datetime="{{ comment.created_at|date:'c' }}">
+                            {{ comment.created_at|timesince }} {% trans "ago" %}
+                        </time>
+                        {% if comment.is_edited %}
+                        <span class="text-xs text-gray-500">({% trans "modifié" %})</span>
+                        {% endif %}
+                        {% if comment.user == user %}
+                        <div class="ml-auto flex gap-2">
+                            <button onclick="editComment('{{ comment.id }}')" class="text-xs text-gray-400 hover:text-purple-400 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form method="post" action="{% url 'movies:delete-comment' comment.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" onclick="return confirm('{% trans "Êtes-vous sûr de vouloir supprimer ce commentaire ?" %}')"
+                                        class="text-xs text-gray-400 hover:text-red-400 transition-colors">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comment Content -->
+                    <div class="comment-content">
+                        {% if comment.is_spoiler %}
+                        <div class="spoiler-warning bg-yellow-900/20 border border-yellow-700/30 rounded p-2 mb-2">
+                            <p class="text-sm text-yellow-400">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                {% trans "Ce commentaire contient des spoilers" %}
+                                <button onclick="toggleSpoiler(this)" class="ml-2 text-xs underline hover:no-underline">
+                                    {% trans "Afficher" %}
+                                </button>
+                            </p>
+                            <div class="spoiler-content hidden mt-2 text-gray-300">
+                                {{ comment.content|linebreaks }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-gray-300">
+                            {{ comment.content|linebreaks }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comment Actions -->
+                    <div class="flex items-center gap-4 mt-3">
+                        {% if user.is_authenticated %}
+                        <button onclick="toggleLike('{{ comment.id }}', true)"
+                                class="like-btn text-sm text-gray-400 hover:text-green-400 transition-colors"
+                                data-comment-id="{{ comment.id }}">
+                            <i class="fas fa-thumbs-up mr-1"></i>
+                            <span class="like-count">{{ comment.like_count }}</span>
+                        </button>
+                        <button onclick="toggleLike('{{ comment.id }}', false)"
+                                class="dislike-btn text-sm text-gray-400 hover:text-red-400 transition-colors"
+                                data-comment-id="{{ comment.id }}">
+                            <i class="fas fa-thumbs-down mr-1"></i>
+                            <span class="dislike-count">{{ comment.dislike_count }}</span>
+                        </button>
+                        <button onclick="toggleReplyForm('{{ comment.id }}')" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+                            <i class="fas fa-reply mr-1"></i>
+                            {% trans "Répondre" %}
+                        </button>
+                        {% else %}
+                        <span class="text-sm text-gray-500">
+                            <i class="fas fa-thumbs-up mr-1"></i>{{ comment.like_count }}
+                        </span>
+                        <span class="text-sm text-gray-500">
+                            <i class="fas fa-thumbs-down mr-1"></i>{{ comment.dislike_count }}
+                        </span>
+                        {% endif %}
+                        {% if comment.reply_count > 0 %}
+                        <button onclick="toggleReplies('{{ comment.id }}')" class="text-sm text-purple-400 hover:text-purple-300 transition-colors">
+                            <i class="fas fa-comments mr-1"></i>
+                            {{ comment.reply_count }} {% if comment.reply_count == 1 %}{% trans "réponse" %}{% else %}{% trans "réponses" %}{% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reply Form (hidden by default) -->
+                    {% if user.is_authenticated %}
+                    <div id="reply-form-{{ comment.id }}" class="hidden mt-4">
+                        <form method="post" action="{% url 'movies:add-comment' movie.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                            <div class="flex gap-2">
+                                <input type="text" name="content" placeholder="{% trans 'Écrire une réponse...' %}"
+                                       class="flex-grow bg-gray-800/30 text-white px-3 py-2 rounded-lg border border-gray-700/30 focus:border-purple-500 focus:outline-none text-sm">
+                                <button type="submit" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    {% trans "Répondre" %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Replies (hidden by default) -->
+                    {% if comment.replies.exists %}
+                    <div id="replies-{{ comment.id }}" class="hidden mt-4 pl-4 border-l-2 border-gray-700/30 space-y-3">
+                        {% for reply in comment.replies.all %}
+                        {% if not reply.is_deleted %}
+                        <div class="reply-item">
+                            <div class="flex items-start gap-2">
+                                <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-white text-xs font-semibold">{{ reply.user.username|first|upper }}</span>
+                                </div>
+                                <div class="flex-grow">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-semibold text-sm">{{ reply.user.username }}</span>
+                                        <time class="text-xs text-gray-500" datetime="{{ reply.created_at|date:'c' }}">
+                                            {{ reply.created_at|timesince }} {% trans "ago" %}
+                                        </time>
+                                        {% if reply.user == user %}
+                                        <form method="post" action="{% url 'movies:delete-comment' reply.id %}" class="inline ml-auto">
+                                            {% csrf_token %}
+                                            <button type="submit" onclick="return confirm('{% trans "Supprimer cette réponse ?" %}')"
+                                                    class="text-xs text-gray-400 hover:text-red-400 transition-colors">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-gray-300">
+                                        {{ reply.content }}
+                                    </div>
+                                    <!-- Reply Actions -->
+                                    {% if user.is_authenticated %}
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <button onclick="toggleLike('{{ reply.id }}', true)"
+                                                class="text-xs text-gray-400 hover:text-green-400 transition-colors"
+                                                data-comment-id="{{ reply.id }}">
+                                            <i class="fas fa-thumbs-up mr-1"></i>{{ reply.like_count }}
+                                        </button>
+                                        <button onclick="toggleLike('{{ reply.id }}', false)"
+                                                class="text-xs text-gray-400 hover:text-red-400 transition-colors"
+                                                data-comment-id="{{ reply.id }}">
+                                            <i class="fas fa-thumbs-down mr-1"></i>{{ reply.dislike_count }}
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-gray-400 text-center py-8">
+            {% trans "Aucun commentaire pour le moment. Soyez le premier à commenter !" %}
+        </p>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+// Toggle spoiler content
+function toggleSpoiler(button) {
+    const spoilerContent = button.parentElement.nextElementSibling;
+    spoilerContent.classList.toggle('hidden');
+    button.textContent = spoilerContent.classList.contains('hidden') ? '{% trans "Afficher" %}' : '{% trans "Masquer" %}';
+}
+
+// Toggle reply form
+function toggleReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    replyForm.classList.toggle('hidden');
+}
+
+// Toggle replies visibility
+function toggleReplies(commentId) {
+    const replies = document.getElementById(`replies-${commentId}`);
+    replies.classList.toggle('hidden');
+}
+
+// Toggle like/dislike
+function toggleLike(commentId, isLike) {
+    const formData = new FormData();
+    formData.append('is_like', isLike);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch(`{% url 'movies:toggle-comment-like' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', commentId), {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Find all buttons for this comment (main comment and replies)
+        const likeBtns = document.querySelectorAll(`button[data-comment-id="${commentId}"][onclick*="true"]`);
+        const dislikeBtns = document.querySelectorAll(`button[data-comment-id="${commentId}"][onclick*="false"]`);
+
+        // Update like buttons
+        likeBtns.forEach(btn => {
+            const likeCount = btn.querySelector('.like-count') || btn.querySelector('i').nextSibling;
+            if (likeCount) {
+                if (likeCount.nodeType === 3) { // Text node
+                    likeCount.textContent = data.like_count;
+                } else {
+                    likeCount.textContent = data.like_count;
+                }
+            }
+
+            // Update colors
+            if (data.user_reaction === 'like') {
+                btn.classList.add('text-green-400');
+                btn.classList.remove('text-gray-400');
+            } else {
+                btn.classList.remove('text-green-400');
+                btn.classList.add('text-gray-400');
+            }
+        });
+
+        // Update dislike buttons
+        dislikeBtns.forEach(btn => {
+            const dislikeCount = btn.querySelector('.dislike-count') || btn.querySelector('i').nextSibling;
+            if (dislikeCount) {
+                if (dislikeCount.nodeType === 3) { // Text node
+                    dislikeCount.textContent = data.dislike_count;
+                } else {
+                    dislikeCount.textContent = data.dislike_count;
+                }
+            }
+
+            // Update colors
+            if (data.user_reaction === 'dislike') {
+                btn.classList.add('text-red-400');
+                btn.classList.remove('text-gray-400');
+            } else {
+                btn.classList.remove('text-red-400');
+                btn.classList.add('text-gray-400');
+            }
+        });
+    });
+}
+
+// Initialize user reactions on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for user reactions data
+    {% if user_reactions %}
+    const userReactions = {
+        {% for comment_id, reaction in user_reactions.items %}
+        '{{ comment_id }}': '{{ reaction }}',
+        {% endfor %}
+    };
+
+    // Apply initial colors based on user reactions
+    Object.keys(userReactions).forEach(commentId => {
+        const reaction = userReactions[commentId];
+        const likeBtns = document.querySelectorAll(`button[data-comment-id="${commentId}"][onclick*="true"]`);
+        const dislikeBtns = document.querySelectorAll(`button[data-comment-id="${commentId}"][onclick*="false"]`);
+
+        if (reaction === 'like') {
+            likeBtns.forEach(btn => {
+                btn.classList.add('text-green-400');
+                btn.classList.remove('text-gray-400');
+            });
+        } else if (reaction === 'dislike') {
+            dislikeBtns.forEach(btn => {
+                btn.classList.add('text-red-400');
+                btn.classList.remove('text-gray-400');
+            });
+        }
+    });
+    {% endif %}
+});
+
+// Edit comment (to be implemented)
+function editComment(commentId) {
+    // Implementation for inline editing
+    alert('Edit feature coming soon!');
+}
+</script>

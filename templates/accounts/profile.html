@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Mon profil" %} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Profile Header -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-8">
+        <div class="flex items-center space-x-6">
+            <!-- Avatar -->
+            <div class="flex-shrink-0">
+                {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="w-24 h-24 rounded-full object-cover">
+                {% else %}
+                <div class="w-24 h-24 rounded-full bg-purple-500 flex items-center justify-center text-2xl font-bold">
+                    {{ user.username|first|upper }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- User Info -->
+            <div class="flex-grow">
+                <h1 class="text-3xl font-bold text-white mb-2">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="text-gray-400 mb-1">@{{ user.username }}</p>
+                <p class="text-gray-400 mb-4">{{ user.email }}</p>
+
+                <!-- Quick Stats -->
+                <div class="flex space-x-6">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-400">{{ user.ratings.count }}</div>
+                        <div class="text-sm text-gray-400">{% trans "Films notés" %}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-400">{{ user.watchlist.count }}</div>
+                        <div class="text-sm text-gray-400">{% trans "À voir" %}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-400">{{ user.favorites.count }}</div>
+                        <div class="text-sm text-gray-400">{% trans "Favoris" %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Button -->
+            <div class="flex-shrink-0">
+                <a href="{% url 'accounts:settings' %}" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md text-sm font-medium transition">
+                    <i class="fas fa-edit mr-2"></i>{% trans "Modifier" %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Recent Activity -->
+        <div class="lg:col-span-2">
+            <h2 class="text-xl font-semibold mb-4">{% trans "Activité récente" %}</h2>
+            <div class="bg-gray-800 rounded-lg p-6">
+                {% if user.ratings.exists %}
+                <div class="space-y-4">
+                    {% for rating in user.ratings.all|slice:":5" %}
+                    <div class="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg">
+                        <img src="{{ rating.movie.poster_url }}" alt="{{ rating.movie.title }}" class="w-12 h-18 object-cover rounded">
+                        <div class="flex-grow">
+                            <h3 class="font-medium">{{ rating.movie.title }}</h3>
+                            <p class="text-sm text-gray-400">{% trans "Noté" %} {{ rating.rating }}/5</p>
+                            <p class="text-xs text-gray-500">{{ rating.created_at|date:"d M Y" }}</p>
+                        </div>
+                        <div class="flex items-center">
+                            {% for i in "12345"|make_list %}
+                            <i class="fas fa-star text-sm {% if forloop.counter <= rating.rating %}text-yellow-400{% else %}text-gray-600{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% if user.ratings.count > 5 %}
+                    <div class="text-center pt-4">
+                        <a href="{% url 'ratings:history' %}" class="text-purple-400 hover:text-purple-300 text-sm">
+                            {% trans "Voir toutes mes notes" %} ({{ user.ratings.count }})
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-star text-gray-600 text-4xl mb-4"></i>
+                    <p class="text-gray-400 mb-4">{% trans "Vous n'avez encore noté aucun film." %}</p>
+                    <a href="{% url 'movies:list' %}" class="text-purple-400 hover:text-purple-300">
+                        {% trans "Découvrir des films" %}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Quick Links -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">{% trans "Accès rapide" %}</h3>
+                <div class="space-y-3">
+                    <a href="{% url 'movies:watchlist' %}" class="flex items-center space-x-3 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-bookmark text-purple-400"></i>
+                        <span>{% trans "Ma liste à voir" %}</span>
+                    </a>
+                    <a href="{% url 'ratings:history' %}" class="flex items-center space-x-3 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-star text-purple-400"></i>
+                        <span>{% trans "Mes notes" %}</span>
+                    </a>
+                    <a href="{% url 'recommendations:for-you' %}" class="flex items-center space-x-3 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-magic text-purple-400"></i>
+                        <span>{% trans "Recommandations" %}</span>
+                    </a>
+                    <a href="{% url 'accounts:settings' %}" class="flex items-center space-x-3 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-cog text-purple-400"></i>
+                        <span>{% trans "Paramètres" %}</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profile Stats -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">{% trans "Statistiques" %}</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">{% trans "Membre depuis" %}</span>
+                        <span class="text-white">{{ user.date_joined|date:"M Y" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">{% trans "Films notés" %}</span>
+                        <span class="text-white">{{ user.ratings.count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">{% trans "Note moyenne" %}</span>
+                        <span class="text-white">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">{% trans "Films favoris" %}</span>
+                        <span class="text-white">{{ user.favorites.count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

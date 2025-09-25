@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load account %}
+
+{% block title %}{% trans "Confirmer l'adresse email" %} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-md w-full">
+        <!-- Icon and Title -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-purple-600 rounded-full mb-4">
+                <i class="fas fa-envelope-open text-3xl text-white"></i>
+            </div>
+            <h2 class="text-3xl font-bold">{% trans "Confirmez votre email" %}</h2>
+        </div>
+
+        <!-- Confirmation Box -->
+        <div class="bg-gray-800 rounded-xl p-8 shadow-2xl text-center">
+            {% if confirmation %}
+            <p class="text-gray-300 mb-6">
+                {% blocktrans with email=confirmation.email_address.email %}
+                Veuillez confirmer que <strong class="text-white">{{ email }}</strong> est bien votre adresse email.
+                {% endblocktrans %}
+            </p>
+
+            <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    {% trans "Confirmer mon adresse email" %}
+                </button>
+            </form>
+            {% else %}
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-5xl mb-4"></i>
+                <p class="text-xl font-semibold mb-2">{% trans "Lien invalide" %}</p>
+                <p class="text-gray-400 mb-6">
+                    {% trans "Ce lien de confirmation est invalide ou a déjà été utilisé." %}
+                </p>
+                <a href="{% url 'account_email' %}"
+                   class="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition">
+                    {% trans "Gérer mes emails" %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Help Text -->
+        <div class="mt-8 text-center text-gray-400 text-sm">
+            <p>{% trans "Besoin d'aide ?" %}</p>
+            <a href="#" class="text-purple-400 hover:text-purple-300">{% trans "Contactez le support" %}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

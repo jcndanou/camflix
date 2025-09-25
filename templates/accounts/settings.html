@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Paramètres" %} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">{% trans "Paramètres du compte" %}</h1>
+        <p class="text-gray-400">{% trans "Gérez vos préférences et informations personnelles" %}</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Settings Navigation -->
+        <div class="lg:col-span-1">
+            <nav class="bg-gray-800 rounded-lg p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#profile" class="flex items-center space-x-3 px-3 py-2 text-purple-400 bg-purple-900/20 rounded-md">
+                            <i class="fas fa-user"></i>
+                            <span>{% trans "Profil" %}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#preferences" class="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition">
+                            <i class="fas fa-cog"></i>
+                            <span>{% trans "Préférences" %}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#notifications" class="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition">
+                            <i class="fas fa-bell"></i>
+                            <span>{% trans "Notifications" %}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#security" class="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>{% trans "Sécurité" %}</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="lg:col-span-3">
+            <form method="post" class="space-y-8">
+                {% csrf_token %}
+
+                <!-- Profile Settings -->
+                <div id="profile" class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-6 text-white">{% trans "Informations du profil" %}</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-300 mb-2">
+                                {% trans "Nom d'utilisateur" %}
+                            </label>
+                            <input type="text" id="username" name="username" value="{{ user.username }}" readonly
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 opacity-50 cursor-not-allowed">
+                            <p class="text-xs text-gray-500 mt-1">{% trans "Le nom d'utilisateur ne peut pas être modifié" %}</p>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-300 mb-2">
+                                {% trans "Adresse e-mail" %}
+                            </label>
+                            <input type="email" id="email" name="email" value="{{ user.email }}"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <div>
+                            <label for="first_name" class="block text-sm font-medium text-gray-300 mb-2">
+                                {% trans "Prénom" %}
+                            </label>
+                            <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <div>
+                            <label for="last_name" class="block text-sm font-medium text-gray-300 mb-2">
+                                {% trans "Nom de famille" %}
+                            </label>
+                            <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences -->
+                <div id="preferences" class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-6 text-white">{% trans "Préférences" %}</h2>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label for="preferred_language" class="block text-sm font-medium text-gray-300 mb-2">
+                                {% trans "Langue préférée" %}
+                            </label>
+                            <select id="preferred_language" name="preferred_language"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="fr" {% if user.preferred_language == 'fr' %}selected{% endif %}>Français</option>
+                                <option value="en" {% if user.preferred_language == 'en' %}selected{% endif %}>English</option>
+                                <option value="es" {% if user.preferred_language == 'es' %}selected{% endif %}>Español</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="bio" class="block text-sm font-medium text-gray-300 mb-2">
+                                {% trans "Biographie" %}
+                            </label>
+                            <textarea id="bio" name="bio" rows="3"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                      placeholder="{% trans 'Parlez-nous de vous...' %}">{{ user.bio }}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                {% trans "Préférences d'affichage" %}
+                            </label>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="show_adult_content"
+                                           {% if preferences.include_adult_content %}checked{% endif %}
+                                           class="rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500">
+                                    <span class="ml-2 text-sm text-gray-300">{% trans "Afficher le contenu pour adultes" %}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div id="notifications" class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-6 text-white">{% trans "Notifications" %}</h2>
+
+                    <div class="space-y-4">
+                        <label class="flex items-center justify-between">
+                            <div>
+                                <span class="text-sm font-medium text-gray-300">{% trans "Notifications par e-mail" %}</span>
+                                <p class="text-xs text-gray-500">{% trans "Recevez des notifications sur les nouvelles recommandations" %}</p>
+                            </div>
+                            <input type="checkbox" name="email_notifications"
+                                   {% if user.email_notifications %}checked{% endif %}
+                                   class="rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500">
+                        </label>
+
+                        <div class="text-sm text-gray-400">
+                            {% trans "D'autres options de notification seront disponibles prochainement." %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security -->
+                <div id="security" class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-6 text-white">{% trans "Sécurité" %}</h2>
+
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-300 mb-2">{% trans "Mot de passe" %}</h3>
+                            <p class="text-sm text-gray-400 mb-3">{% trans "Dernière modification il y a 30 jours" %}</p>
+                            <a href="{% url 'account_change_password' %}"
+                               class="inline-flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-md transition">
+                                <i class="fas fa-key mr-2"></i>
+                                {% trans "Changer le mot de passe" %}
+                            </a>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-300 mb-2">{% trans "Sessions actives" %}</h3>
+                            <p class="text-sm text-gray-400 mb-3">{% trans "Gérez les appareils connectés à votre compte" %}</p>
+                            <button type="button"
+                                    class="inline-flex items-center px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm rounded-md transition">
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                {% trans "Déconnecter tous les appareils" %}
+                            </button>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-300 mb-2">{% trans "Données du compte" %}</h3>
+                            <p class="text-sm text-gray-400 mb-3">{% trans "Téléchargez ou supprimez vos données" %}</p>
+                            <div class="flex space-x-3">
+                                <button type="button"
+                                        class="inline-flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white text-sm rounded-md transition">
+                                    <i class="fas fa-download mr-2"></i>
+                                    {% trans "Exporter mes données" %}
+                                </button>
+                                <button type="button"
+                                        class="inline-flex items-center px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm rounded-md transition">
+                                    <i class="fas fa-trash mr-2"></i>
+                                    {% trans "Supprimer le compte" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="flex justify-end pt-6 border-t border-gray-700">
+                    <button type="submit"
+                            class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-md text-white font-medium transition">
+                        <i class="fas fa-save mr-2"></i>
+                        {% trans "Enregistrer les modifications" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Smooth scrolling for navigation links
+document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+</script>
+{% endblock %}

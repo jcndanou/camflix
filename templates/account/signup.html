@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Inscription" %} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-md w-full">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-purple-600 rounded-full mb-4 animate-pulse">
+                <i class="fas fa-film text-3xl text-white"></i>
+            </div>
+            <h2 class="text-3xl font-bold">{% trans "Rejoignez CamFlix" %}</h2>
+            <p class="mt-2 text-gray-400">{% trans "Créez votre compte et découvrez des films qui vous correspondent" %}</p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="flex items-center justify-center mb-6">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                <div class="w-16 h-1 bg-gray-600"></div>
+                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-gray-400 text-sm">2</div>
+                <div class="w-16 h-1 bg-gray-600"></div>
+                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-gray-400 text-sm">3</div>
+            </div>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
+            {% if form.non_field_errors %}
+            <div class="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'account_signup' %}" class="space-y-6" id="signupForm">
+                {% csrf_token %}
+
+                <!-- Username Field -->
+                <div>
+                    <label for="id_username" class="block text-sm font-medium mb-2">
+                        {% trans "Nom d'utilisateur" %}
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" name="username" id="id_username"
+                               class="w-full pl-10 pr-3 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                               placeholder="{% trans 'Choisissez un nom d\'utilisateur' %}"
+                               value="{{ form.username.value|default:'' }}"
+                               required autofocus>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-check-circle text-green-500 hidden" id="username-check"></i>
+                            <i class="fas fa-times-circle text-red-500 hidden" id="username-error"></i>
+                        </div>
+                    </div>
+                    {% if form.username.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-400">{% trans "Lettres, chiffres et tirets uniquement" %}</p>
+                </div>
+
+                <!-- Email Field -->
+                <div>
+                    <label for="id_email" class="block text-sm font-medium mb-2">
+                        {% trans "Adresse email" %}
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" name="email" id="id_email"
+                               class="w-full pl-10 pr-3 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                               placeholder="{% trans 'votre@email.com' %}"
+                               value="{{ form.email.value|default:'' }}"
+                               required>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-check-circle text-green-500 hidden" id="email-check"></i>
+                            <i class="fas fa-times-circle text-red-500 hidden" id="email-error"></i>
+                        </div>
+                    </div>
+                    {% if form.email.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Email Field -->
+                <div>
+                    <label for="id_email2" class="block text-sm font-medium mb-2">
+                        {% trans "Confirmer l'email" %}
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" name="email2" id="id_email2"
+                               class="w-full pl-10 pr-3 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                               placeholder="{% trans 'Confirmez votre email' %}"
+                               value="{{ form.email2.value|default:'' }}"
+                               required>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-check-circle text-green-500 hidden" id="email2-check"></i>
+                            <i class="fas fa-times-circle text-red-500 hidden" id="email2-error"></i>
+                        </div>
+                    </div>
+                    {% if form.email2.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.email2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="id_password1" class="block text-sm font-medium mb-2">
+                        {% trans "Mot de passe" %}
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" name="password1" id="id_password1"
+                               class="w-full pl-10 pr-10 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                               placeholder="{% trans 'Créez un mot de passe sécurisé' %}"
+                               required onkeyup="checkPasswordStrength(this.value)">
+                        <button type="button" onclick="togglePassword(this)"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-eye text-gray-400 hover:text-gray-300"></i>
+                        </button>
+                    </div>
+                    {% if form.password1.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+
+                    <!-- Password Strength Indicator -->
+                    <div class="mt-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div id="password-strength" class="h-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <span id="strength-text" class="text-xs text-gray-400">{% trans "Force" %}</span>
+                        </div>
+                        <ul class="mt-2 text-xs text-gray-400 space-y-1">
+                            <li id="length-check"><i class="fas fa-times-circle text-red-500 mr-1"></i> {% trans "Au moins 8 caractères" %}</li>
+                            <li id="letter-check"><i class="fas fa-times-circle text-red-500 mr-1"></i> {% trans "Lettres majuscules et minuscules" %}</li>
+                            <li id="number-check"><i class="fas fa-times-circle text-red-500 mr-1"></i> {% trans "Au moins un chiffre" %}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div>
+                    <label for="id_password2" class="block text-sm font-medium mb-2">
+                        {% trans "Confirmer le mot de passe" %}
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" name="password2" id="id_password2"
+                               class="w-full pl-10 pr-10 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                               placeholder="{% trans 'Confirmez votre mot de passe' %}"
+                               required>
+                        <button type="button" onclick="togglePassword(this)"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-eye text-gray-400 hover:text-gray-300"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="flex items-start">
+                    <input type="checkbox" id="terms" name="terms"
+                           class="w-4 h-4 mt-1 bg-gray-700 border-gray-600 rounded focus:ring-2 focus:ring-purple-500 text-purple-600"
+                           required>
+                    <label for="terms" class="ml-2 text-sm text-gray-300">
+                        {% trans "J'accepte les" %}
+                        <a href="#" class="text-purple-400 hover:text-purple-300">{% trans "conditions d'utilisation" %}</a>
+                        {% trans "et la" %}
+                        <a href="#" class="text-purple-400 hover:text-purple-300">{% trans "politique de confidentialité" %}</a>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        id="submitBtn">
+                    <span class="flex items-center justify-center">
+                        <i class="fas fa-rocket mr-2"></i>
+                        {% trans "Créer mon compte" %}
+                    </span>
+                </button>
+
+                {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Login Link -->
+        <p class="mt-8 text-center text-gray-400">
+            {% trans "Déjà un compte ?" %}
+            <a href="{% url 'account_login' %}" class="text-purple-400 hover:text-purple-300 font-semibold transition">
+                {% trans "Connectez-vous" %}
+            </a>
+        </p>
+    </div>
+</div>
+
+<script>
+// Toggle password visibility
+function togglePassword(button) {
+    const input = button.parentElement.querySelector('input');
+    const icon = button.querySelector('i');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Check password strength
+function checkPasswordStrength(password) {
+    let strength = 0;
+    const strengthBar = document.getElementById('password-strength');
+    const strengthText = document.getElementById('strength-text');
+
+    // Check length
+    const lengthCheck = document.getElementById('length-check');
+    if (password.length >= 8) {
+        strength += 33;
+        lengthCheck.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Au moins 8 caractères';
+    } else {
+        lengthCheck.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i> Au moins 8 caractères';
+    }
+
+    // Check for mixed case
+    const letterCheck = document.getElementById('letter-check');
+    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) {
+        strength += 33;
+        letterCheck.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Lettres majuscules et minuscules';
+    } else {
+        letterCheck.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i> Lettres majuscules et minuscules';
+    }
+
+    // Check for numbers
+    const numberCheck = document.getElementById('number-check');
+    if (password.match(/\d/)) {
+        strength += 34;
+        numberCheck.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Au moins un chiffre';
+    } else {
+        numberCheck.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i> Au moins un chiffre';
+    }
+
+    // Update strength bar
+    strengthBar.style.width = strength + '%';
+
+    if (strength < 34) {
+        strengthBar.className = 'h-full bg-red-500 transition-all duration-300';
+        strengthText.textContent = 'Faible';
+        strengthText.className = 'text-xs text-red-500';
+    } else if (strength < 67) {
+        strengthBar.className = 'h-full bg-yellow-500 transition-all duration-300';
+        strengthText.textContent = 'Moyen';
+        strengthText.className = 'text-xs text-yellow-500';
+    } else {
+        strengthBar.className = 'h-full bg-green-500 transition-all duration-300';
+        strengthText.textContent = 'Fort';
+        strengthText.className = 'text-xs text-green-500';
+    }
+}
+
+// Real-time validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Username validation
+    const usernameInput = document.getElementById('id_username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            const value = this.value;
+            const check = document.getElementById('username-check');
+            const error = document.getElementById('username-error');
+
+            if (value.length >= 3 && /^[a-zA-Z0-9_-]+$/.test(value)) {
+                check.classList.remove('hidden');
+                error.classList.add('hidden');
+            } else {
+                check.classList.add('hidden');
+                error.classList.remove('hidden');
+            }
+        });
+    }
+
+    // Email validation
+    const emailInput = document.getElementById('id_email');
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            const value = this.value;
+            const check = document.getElementById('email-check');
+            const error = document.getElementById('email-error');
+
+            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                check.classList.remove('hidden');
+                error.classList.add('hidden');
+            } else {
+                check.classList.add('hidden');
+                if (value.length > 0) error.classList.remove('hidden');
+            }
+        });
+    }
+
+    // Email confirmation validation
+    const email2Input = document.getElementById('id_email2');
+    if (email2Input) {
+        email2Input.addEventListener('input', function() {
+            const value = this.value;
+            const email1 = document.getElementById('id_email').value;
+            const check = document.getElementById('email2-check');
+            const error = document.getElementById('email2-error');
+
+            if (value === email1 && value.length > 0) {
+                check.classList.remove('hidden');
+                error.classList.add('hidden');
+            } else {
+                check.classList.add('hidden');
+                if (value.length > 0) error.classList.remove('hidden');
+            }
+        });
+    }
+});
+</script>
+
+<style>
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.max-w-md {
+    animation: slideIn 0.5s ease-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+input:focus {
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+}
+
+.bg-gradient-to-r {
+    background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+</style>
+{% endblock %}

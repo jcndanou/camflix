@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold mb-8">{{ page_title }}</h1>
+
+    {% if query %}
+    <div class="mb-6 bg-gray-800 rounded-lg p-4">
+        <p class="text-lg">
+            {% trans "Résultats pour" %}: <span class="font-semibold text-purple-400">{{ query }}</span>
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Movies Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {% for movie in movies %}
+        <div class="group relative overflow-hidden rounded-lg hover:transform hover:scale-105 transition duration-300">
+            <a href="{% url 'movies:detail' movie.id %}">
+                {% if movie.poster_url %}
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}"
+                     class="w-full h-auto object-cover">
+                {% else %}
+                <div class="bg-gray-700 aspect-[2/3] flex items-center justify-center">
+                    <i class="fas fa-film text-4xl text-gray-600"></i>
+                </div>
+                {% endif %}
+
+                <!-- Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute bottom-0 p-4">
+                        <h3 class="font-semibold text-sm line-clamp-2">{{ movie.get_localized_title }}</h3>
+                        <div class="flex items-center mt-1 text-xs">
+                            {% if movie.release_date %}
+                            <span class="text-gray-300">{{ movie.release_date.year }}</span>
+                            {% endif %}
+                            {% if movie.vote_average %}
+                            <span class="ml-auto flex items-center">
+                                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                {{ movie.vote_average|floatformat:1 }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <i class="fas fa-film text-6xl text-gray-600 mb-4"></i>
+            <p class="text-xl text-gray-400">{% trans "Aucun film trouvé" %}</p>
+            {% if query %}
+            <p class="mt-4">
+                <a href="{% url 'movies:list' %}" class="text-purple-400 hover:text-purple-300">
+                    {% trans "Voir tous les films" %}
+                </a>
+            </p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

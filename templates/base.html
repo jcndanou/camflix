@@ -1,0 +1,199 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{% get_current_language as LANGUAGE_CODE %}{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}CamFlix - Votre plateforme de recommandation de films{% endblock %}">
+    <title>{% block title %}CamFlix{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="text-2xl font-bold text-purple-400 hover:text-purple-300 transition">
+                        <i class="fas fa-film mr-2"></i>CamFlix
+                    </a>
+
+                    <!-- Main Navigation -->
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="{% url 'movies:list' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition">
+                                Films
+                            </a>
+                            <a href="{% url 'movies:trending' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition">
+                                Tendances
+                            </a>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'recommendations:for-you' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition">
+                                Pour vous
+                            </a>
+                            <a href="{% url 'movies:watchlist' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition">
+                                Ma liste
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Navigation -->
+                <div class="flex items-center space-x-4">
+                    <!-- Search -->
+                    <form method="get" action="{% url 'movies:search' %}" class="hidden md:block">
+                        <input type="text" name="q" placeholder="Rechercher un film..."
+                               class="bg-gray-700 text-white px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </form>
+
+                    <!-- User Menu -->
+                    {% if user.is_authenticated %}
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="flex items-center space-x-2 text-sm focus:outline-none">
+                            {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full">
+                            {% else %}
+                            <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center">
+                                {{ user.username|first|upper }}
+                            </div>
+                            {% endif %}
+                            <span class="hidden md:block">{{ user.username }}</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+
+                        <div x-show="open" @click.away="open = false" x-transition
+                             class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-2 z-50">
+                            <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm hover:bg-gray-700">
+                                <i class="fas fa-user mr-2"></i>Mon profil
+                            </a>
+                            <a href="{% url 'accounts:settings' %}" class="block px-4 py-2 text-sm hover:bg-gray-700">
+                                <i class="fas fa-cog mr-2"></i>Paramètres
+                            </a>
+                            {% if user.is_staff %}
+                            <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm hover:bg-gray-700">
+                                <i class="fas fa-shield-alt mr-2"></i>Administration
+                            </a>
+                            {% endif %}
+                            <hr class="my-2 border-gray-700">
+                            <a href="{% url 'account_logout' %}" class="block px-4 py-2 text-sm hover:bg-gray-700">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'account_login' %}" class="text-sm hover:text-purple-400 transition">
+                        Connexion
+                    </a>
+                    <a href="{% url 'account_signup' %}" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md text-sm font-medium transition">
+                        Inscription
+                    </a>
+                    {% endif %}
+
+                    <!-- Mobile menu button -->
+                    <button class="md:hidden p-2 rounded-md hover:bg-gray-700">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div x-data="{ show: true }" x-show="show" x-transition
+             class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900{% elif message.tags == 'success' %}bg-green-900{% else %}bg-blue-900{% endif %}">
+            <div class="flex justify-between items-center">
+                <p class="text-sm">{{ message }}</p>
+                <button @click="show = false" class="text-white hover:text-gray-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-purple-400">CamFlix</h3>
+                    <p class="text-sm text-gray-400">
+                        Votre plateforme de recommandation de films personnalisée.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold mb-4 uppercase text-gray-300">Découvrir</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="{% url 'movies:trending' %}" class="hover:text-white transition">Films tendances</a></li>
+                        <li><a href="{% url 'movies:top-rated' %}" class="hover:text-white transition">Mieux notés</a></li>
+                        <li><a href="{% url 'movies:genres' %}" class="hover:text-white transition">Par genre</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold mb-4 uppercase text-gray-300">Compte</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'accounts:profile' %}" class="hover:text-white transition">Mon profil</a></li>
+                        <li><a href="{% url 'movies:watchlist' %}" class="hover:text-white transition">Ma liste</a></li>
+                        <li><a href="{% url 'ratings:history' %}" class="hover:text-white transition">Mes notes</a></li>
+                        {% else %}
+                        <li><a href="{% url 'account_login' %}" class="hover:text-white transition">Connexion</a></li>
+                        <li><a href="{% url 'account_signup' %}" class="hover:text-white transition">Inscription</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold mb-4 uppercase text-gray-300">À propos</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">Mentions légales</a></li>
+                        <li><a href="#" class="hover:text-white transition">Confidentialité</a></li>
+                        <li><a href="#" class="hover:text-white transition">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm text-gray-400">
+                <p>&copy; 2024 CamFlix. Tous droits réservés.</p>
+                <p class="mt-2">Données fournies par <a href="https://www.themoviedb.org/" target="_blank" class="text-purple-400 hover:text-purple-300">TMDB</a></p>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

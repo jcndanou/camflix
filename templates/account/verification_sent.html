@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Email de vérification envoyé" %} - CamFlix{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-md w-full">
+        <!-- Icon and Title -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-600 rounded-full mb-4 animate-pulse">
+                <i class="fas fa-paper-plane text-3xl text-white"></i>
+            </div>
+            <h2 class="text-3xl font-bold">{% trans "Email envoyé !" %}</h2>
+        </div>
+
+        <!-- Content Box -->
+        <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
+            <div class="text-center">
+                <p class="text-xl text-gray-300 mb-4">
+                    {% trans "Vérifiez votre boîte de réception" %}
+                </p>
+                <p class="text-gray-400 mb-6">
+                    {% trans "Nous avons envoyé un email de confirmation à votre adresse. Cliquez sur le lien dans l'email pour activer votre compte." %}
+                </p>
+
+                <!-- Email Icon Animation -->
+                <div class="my-8">
+                    <div class="relative inline-flex">
+                        <div class="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center">
+                            <i class="fas fa-inbox text-4xl text-gray-400"></i>
+                        </div>
+                        <div class="absolute top-0 right-0 -mt-2 -mr-2">
+                            <span class="flex h-8 w-8">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-8 w-8 bg-purple-500 items-center justify-center text-white font-bold">1</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="bg-gray-700 rounded-lg p-4 mb-6">
+                    <h3 class="font-semibold text-white mb-2">{% trans "Prochaines étapes :" %}</h3>
+                    <ol class="text-left text-gray-300 space-y-2 text-sm">
+                        <li class="flex items-start">
+                            <span class="text-purple-400 font-bold mr-2">1.</span>
+                            <span>{% trans "Ouvrez votre boîte email" %}</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-purple-400 font-bold mr-2">2.</span>
+                            <span>{% trans "Trouvez l'email de CamFlix" %}</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-purple-400 font-bold mr-2">3.</span>
+                            <span>{% trans "Cliquez sur le lien de confirmation" %}</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- Didn't receive email -->
+                <div class="border-t border-gray-700 pt-6">
+                    <p class="text-gray-400 text-sm mb-3">
+                        {% trans "Vous n'avez pas reçu l'email ?" %}
+                    </p>
+                    <p class="text-gray-500 text-xs mb-4">
+                        {% trans "Vérifiez votre dossier spam ou attendez quelques minutes." %}
+                    </p>
+                    <a href="{% url 'account_email' %}"
+                       class="inline-block px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">
+                        <i class="fas fa-redo mr-2"></i>
+                        {% trans "Renvoyer l'email" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="mt-8 text-center">
+            <a href="{% url 'home' %}" class="text-gray-400 hover:text-purple-400 transition">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {% trans "Retour à l'accueil" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

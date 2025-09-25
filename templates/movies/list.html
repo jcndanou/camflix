@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Films - CamFlix{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header with filters -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-6">{% trans "Tous les films" %}</h1>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-4 items-center">
+            <!-- Genre filter -->
+            <select id="genre-filter" class="bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="">{% trans "Tous les genres" %}</option>
+                {% for genre in genres %}
+                <option value="{{ genre.id }}" {% if current_genre == genre.id|stringformat:"s" %}selected{% endif %}>
+                    {{ genre.get_localized_name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <!-- Sort -->
+            <select id="sort-filter" class="bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="-popularity" {% if current_sort == '-popularity' %}selected{% endif %}>{% trans "Popularité" %}</option>
+                <option value="-release_date" {% if current_sort == '-release_date' %}selected{% endif %}>{% trans "Plus récents" %}</option>
+                <option value="-vote_average" {% if current_sort == '-vote_average' %}selected{% endif %}>{% trans "Mieux notés" %}</option>
+                <option value="title" {% if current_sort == 'title' %}selected{% endif %}>{% trans "Titre (A-Z)" %}</option>
+            </select>
+
+            <!-- Search -->
+            {% if current_query %}
+            <div class="flex items-center bg-gray-800 px-4 py-2 rounded-lg">
+                <span class="text-sm text-gray-400">Recherche: </span>
+                <span class="ml-2 font-semibold">{{ current_query }}</span>
+                <a href="{% url 'movies:list' %}" class="ml-2 text-red-400 hover:text-red-300">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Movies Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {% for movie in movies %}
+        <div class="group relative overflow-hidden rounded-lg hover:transform hover:scale-105 transition duration-300">
+            <a href="{% url 'movies:detail' movie.id %}">
+                {% if movie.poster_url %}
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}"
+                     class="w-full h-auto object-cover">
+                {% else %}
+                <div class="bg-gray-700 aspect-[2/3] flex items-center justify-center">
+                    <i class="fas fa-film text-4xl text-gray-600"></i>
+                </div>
+                {% endif %}
+
+                <!-- Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute bottom-0 p-4">
+                        <h3 class="font-semibold text-sm line-clamp-2">{{ movie.get_localized_title }}</h3>
+                        <div class="flex items-center mt-1 text-xs">
+                            {% if movie.release_date %}
+                            <span class="text-gray-300">{{ movie.release_date.year }}</span>
+                            {% endif %}
+                            {% if movie.vote_average %}
+                            <span class="ml-auto flex items-center">
+                                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                {{ movie.vote_average|floatformat:1 }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <i class="fas fa-film text-6xl text-gray-600 mb-4"></i>
+            <p class="text-xl text-gray-400">{% trans "Aucun film trouvé" %}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        <nav class="inline-flex rounded-md shadow-sm">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}"
+               class="px-3 py-2 rounded-l-md border border-gray-700 bg-gray-800 text-sm font-medium text-white hover:bg-gray-700">
+                {% trans "Précédent" %}
+            </a>
+            {% endif %}
+
+            <span class="px-4 py-2 border-t border-b border-gray-700 bg-gray-900 text-sm font-medium text-white">
+                Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}"
+               class="px-3 py-2 rounded-r-md border border-gray-700 bg-gray-800 text-sm font-medium text-white hover:bg-gray-700">
+                {% trans "Suivant" %}
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Handle filter changes
+    document.getElementById('genre-filter').addEventListener('change', function() {
+        const url = new URL(window.location);
+        if (this.value) {
+            url.searchParams.set('genre', this.value);
+        } else {
+            url.searchParams.delete('genre');
+        }
+        url.searchParams.delete('page');
+        window.location = url.toString();
+    });
+
+    document.getElementById('sort-filter').addEventListener('change', function() {
+        const url = new URL(window.location);
+        url.searchParams.set('sort', this.value);
+        url.searchParams.delete('page');
+        window.location = url.toString();
+    });
+</script>
+{% endblock %}
