@@ -3,6 +3,8 @@ Production settings for CamFlix project.
 """
 
 from .base import *
+import os
+from pathlib import Path
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -69,6 +71,11 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS')
 RATELIMIT_ENABLE = True
 RATELIMIT_VIEW = 'apps.common.views.ratelimited'
 
+# Ensure log directory exists
+LOG_FILE_PATH = env('LOG_FILE_PATH', default='logs/django.log')
+log_dir = Path(LOG_FILE_PATH).parent
+log_dir.mkdir(parents=True, exist_ok=True)
+
 # Logging for production
 LOGGING = {
     'version': 1,
@@ -93,7 +100,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/camflix/django.log',
+            'filename': LOG_FILE_PATH,
             'maxBytes': 1024 * 1024 * 15,  # 15MB
             'backupCount': 10,
             'formatter': 'verbose',
